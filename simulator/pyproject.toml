@@ -1,0 +1,17 @@
+[project]
+name = "traffic-incident-simulator"
+version = "0.1.0"
+description = "Fake traffic detection event generator for the incident platform."
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.27.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
