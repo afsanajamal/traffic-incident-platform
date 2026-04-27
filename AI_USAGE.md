@@ -29,6 +29,10 @@ Prompted AI to implement the codebase from the plan:
 
 Prompted AI to add backend and simulator tests, then write README and documentation covering architecture, API usage, progress, tradeoffs, and known limitations.
 
+## Authentication And Roles
+
+Prompted AI to add token-based authentication, invite-only registration, role-based permissions, super-admin fake event generation, traffic-monitor notifications, and police/fire responder reports.
+
 ## Human Decisions
 
 The implementation intentionally keeps scope focused on the assignment. Authentication, audit logs, multi-instance WebSocket fan-out, and geospatial features are documented as future production improvements rather than included in v1.

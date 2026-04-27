@@ -4,6 +4,8 @@ from datetime import UTC, datetime
 
 from fastapi.testclient import TestClient
 
+from app.auth.dependencies import get_current_user
+from app.auth.domain import UserRole
 from app.incidents.domain import Status
 from app.incidents.router import get_incident_service
 from app.incidents.schemas import IncidentCreate, IncidentList, IncidentRead
@@ -62,8 +64,13 @@ class FakeIncidentService:
         return self.incident.model_copy(update={"status": status})
 
 
+class FakeUser:
+    role = UserRole.SUPER_ADMIN
+
+
 def client() -> TestClient:
     app.dependency_overrides[get_incident_service] = FakeIncidentService
+    app.dependency_overrides[get_current_user] = lambda: FakeUser()
     return TestClient(app)
 
 

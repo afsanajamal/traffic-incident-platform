@@ -4,7 +4,13 @@ from datetime import datetime
 from app.incidents.domain import IncidentType, Severity, Status
 from app.incidents.model import Incident
 from app.incidents.repository import IncidentRepository
-from app.incidents.schemas import IncidentCreate, IncidentList, IncidentRead, SortOption
+from app.incidents.schemas import (
+    IncidentCreate,
+    IncidentList,
+    IncidentRead,
+    IncidentUpdate,
+    SortOption,
+)
 from app.realtime.connection_manager import ConnectionManager
 
 
@@ -69,6 +75,18 @@ class IncidentService:
         if incident is None:
             raise IncidentNotFoundError
         return self._to_read(self.repository.update_status(incident, status))
+
+    def update(self, incident_id: uuid.UUID, data: IncidentUpdate) -> IncidentRead:
+        incident = self.repository.get(incident_id)
+        if incident is None:
+            raise IncidentNotFoundError
+        return self._to_read(self.repository.update(incident, data))
+
+    def delete(self, incident_id: uuid.UUID) -> None:
+        incident = self.repository.get(incident_id)
+        if incident is None:
+            raise IncidentNotFoundError
+        self.repository.delete(incident)
 
     def _to_read(self, incident: Incident) -> IncidentRead:
         return IncidentRead.model_validate(incident)

@@ -31,7 +31,16 @@ Important URLs:
 - Dashboard: http://localhost:3000
 - PostgreSQL: localhost:5432
 
-The API container runs `alembic upgrade head` before starting. The simulator posts one fake incident every five seconds.
+The API container runs `alembic upgrade head` before starting. The simulator defaults to one fake incident every 120 seconds. Super admins can start/stop fake event generation and change the interval from the dashboard without restarting the simulator.
+
+Default super admin login:
+
+```text
+Email: admin@example.com
+Password: admin12345
+```
+
+Change these with `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_PASSWORD`, and `SUPER_ADMIN_NAME` in Docker Compose or your environment.
 
 ## API Summary
 
@@ -40,6 +49,14 @@ The API container runs `alembic upgrade head` before starting. The simulator pos
 - `GET /api/incidents/{incident_id}` returns one incident.
 - `PATCH /api/incidents/{incident_id}/status` updates operator workflow status.
 - `WS /ws/incidents` streams newly created incidents.
+- `POST /api/auth/login` authenticates users.
+- `POST /api/auth/register` registers users with an invitation token.
+- `POST /api/invitations` creates invite-only registrations for super admins.
+- `POST /api/simulator/events` lets a super admin generate fake events on demand.
+- `GET /api/simulator/settings` returns the current simulator timer.
+- `PATCH /api/simulator/settings` lets a super admin update the simulator timer and enabled state.
+- `POST /api/incidents/{incident_id}/notifications` lets traffic monitors notify responders.
+- `POST /api/incidents/{incident_id}/reports` lets police/fire users record response reports.
 - `GET /health` returns service health.
 
 ## Local Tests

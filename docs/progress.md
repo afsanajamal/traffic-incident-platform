@@ -16,11 +16,18 @@
 - Dockerfiles for API, dashboard, and simulator.
 - Root Docker Compose for PostgreSQL, API, dashboard, and simulator.
 - README, architecture docs, API docs, progress log, and AI usage log.
+- Token-based authentication with seeded super admin.
+- Invite-only user registration.
+- Role-based API access for super admin, traffic monitor, police, and fire fighter.
+- Responder notifications and incident reports.
+- Dashboard login/register, super-admin invite controls, fake event trigger, and role-specific incident actions.
+- Dynamic simulator interval setting with 120-second default and super-admin dashboard control.
+- Super-admin start/stop toggle for continuous fake event generation.
 
 ## Known Limitations
 
-- No authentication or authorization.
-- No operator audit log.
+- Authentication is token-based and suitable for this assignment, but not hardened for production SSO or MFA.
+- No full operator audit log beyond responder reports.
 - No retry queue for failed detector submissions.
 - WebSocket broadcasts are in-process only.
 - The dashboard has basic build-time verification but no browser automation tests yet.

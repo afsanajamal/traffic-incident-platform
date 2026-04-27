@@ -21,6 +21,10 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://traffic:traffic@postgres:5432/traffic_incidents
       CORS_ORIGINS: '["http://localhost:3000"]'
+      AUTH_SECRET_KEY: local-dev-auth-secret
+      SUPER_ADMIN_EMAIL: admin@example.com
+      SUPER_ADMIN_PASSWORD: admin12345
+      SUPER_ADMIN_NAME: System Admin
     ports:
       - "8000:8000"
     depends_on:
@@ -43,7 +47,7 @@ services:
       context: ./simulator
     environment:
       API_BASE_URL: http://api:8000
-      INTERVAL_SECONDS: 5
+      INTERVAL_SECONDS: 120
       RUN_MODE: continuous
     depends_on:
       - api

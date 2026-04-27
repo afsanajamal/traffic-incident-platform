@@ -87,3 +87,60 @@ Payload:
   }
 }
 ```
+
+## Authentication
+
+```http
+POST /api/auth/login
+Content-Type: application/json
+```
+
+```json
+{
+  "email": "admin@example.com",
+  "password": "admin12345"
+}
+```
+
+Use the returned token on protected endpoints:
+
+```http
+Authorization: Bearer <token>
+```
+
+User registration is invitation-only:
+
+```http
+POST /api/invitations
+POST /api/auth/register
+```
+
+## Roles
+
+- `super_admin`: all pages, user invitations, fake event generation, incident CRUD.
+- `traffic_monitor`: observe incidents and notify police/fire responders.
+- `police`: receive notifications, update incident status, and submit reports.
+- `fire_fighter`: receive notifications, update incident status, and submit reports.
+
+## Simulator Settings
+
+The continuous simulator reads this endpoint before each wait cycle:
+
+```http
+GET /api/simulator/settings
+```
+
+Super admins can update the interval:
+
+```http
+PATCH /api/simulator/settings
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+```json
+{
+  "interval_seconds": 120,
+  "is_enabled": true
+}
+```

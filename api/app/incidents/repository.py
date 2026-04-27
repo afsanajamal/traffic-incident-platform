@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.incidents.domain import IncidentType, Severity, Status
 from app.incidents.model import Incident
-from app.incidents.schemas import IncidentCreate, SortOption
+from app.incidents.schemas import IncidentCreate, IncidentUpdate, SortOption
 
 
 class IncidentRepository:
@@ -56,6 +56,18 @@ class IncidentRepository:
         self.db.commit()
         self.db.refresh(incident)
         return incident
+
+    def update(self, incident: Incident, data: IncidentUpdate) -> Incident:
+        for field, value in data.model_dump(exclude_unset=True).items():
+            setattr(incident, field, value)
+        self.db.add(incident)
+        self.db.commit()
+        self.db.refresh(incident)
+        return incident
+
+    def delete(self, incident: Incident) -> None:
+        self.db.delete(incident)
+        self.db.commit()
 
     def _filtered_query(
         self,
