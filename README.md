@@ -42,6 +42,50 @@ Password: admin12345
 
 Change these with `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_PASSWORD`, and `SUPER_ADMIN_NAME` in Docker Compose or your environment.
 
+## Run Locally
+
+You can run the API and dashboard from separate terminals while still using Docker for PostgreSQL.
+
+If the full Docker stack is already running, stop the API, dashboard, and simulator containers so local ports are free:
+
+```bash
+docker compose stop api dashboard simulator
+```
+
+Keep PostgreSQL running:
+
+```bash
+docker compose up -d postgres
+```
+
+Backend terminal:
+
+```bash
+cd api
+cp .env.example .env
+make dev
+```
+
+`make dev` runs Alembic migrations and then starts FastAPI with reload at `http://localhost:8000`.
+
+Frontend terminal:
+
+```bash
+cd dashboard
+cp .env.local.example .env.local
+npm install
+npm run dev
+```
+
+The dashboard runs at `http://localhost:3000`.
+
+Optional simulator terminal:
+
+```bash
+cd simulator
+API_BASE_URL=http://localhost:8000 INTERVAL_SECONDS=120 RUN_MODE=continuous uv run python -m simulator.main
+```
+
 ## API Summary
 
 - `POST /api/incidents` creates an incident from a detection event.
