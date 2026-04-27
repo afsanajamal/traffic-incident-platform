@@ -5,7 +5,10 @@ from sqlalchemy import engine_from_config, pool
 
 from app.core.config import get_settings
 from app.core.database import Base
+from app.auth.model import Invitation, User  # noqa: F401
 from app.incidents.model import Incident  # noqa: F401
+from app.operations.model import IncidentNotification, IncidentReport  # noqa: F401
+from app.simulator_control.model import SimulatorSettings  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", get_settings().database_url)

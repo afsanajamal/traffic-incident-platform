@@ -34,6 +34,12 @@ main {
   padding: 18px 24px;
 }
 
+.topbar-actions {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
 h1,
 h2,
 p {
@@ -121,6 +127,114 @@ button:disabled {
   border-bottom: 1px solid #fecdca;
   color: var(--danger);
   padding: 10px 24px;
+}
+
+.auth-shell {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.auth-panel {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  max-width: 420px;
+  padding: 24px;
+  width: 100%;
+}
+
+.auth-panel h1 {
+  font-size: 24px;
+}
+
+.auth-panel p {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.secondary-button {
+  background: #f5f7f9;
+}
+
+.form-error {
+  background: #fef3f2;
+  border: 1px solid #fecdca;
+  border-radius: 6px;
+  color: var(--danger);
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.admin-panel {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+}
+
+.admin-panel form,
+.simulator-panel form {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(220px, 1fr) 180px 110px;
+}
+
+.simulator-panel {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+}
+
+.simulator-panel strong,
+.simulator-panel span {
+  display: block;
+}
+
+.simulator-panel span {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 3px;
+}
+
+.invite-token {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.invite-token code {
+  background: #eef2f5;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.notification-strip {
+  background: #fffaeb;
+  border-bottom: 1px solid #fedf89;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 10px 24px;
+}
+
+.notification-strip button {
+  border-color: #fedf89;
+  color: #93370d;
+  flex: 0 0 auto;
+  max-width: 520px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .workspace {
@@ -295,8 +409,15 @@ dd {
   grid-template-columns: repeat(3, 1fr);
 }
 
+.responder-actions {
+  grid-template-columns: 1fr 1fr;
+  margin-top: 10px;
+}
+
 @media (max-width: 960px) {
   .filters,
+  .admin-panel form,
+  .simulator-panel form,
   .workspace {
     grid-template-columns: 1fr;
   }

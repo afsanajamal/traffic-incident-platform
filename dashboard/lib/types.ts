@@ -9,6 +9,7 @@ export type IncidentType =
 
 export type Severity = "low" | "medium" | "high" | "critical";
 export type Status = "new" | "acknowledged" | "resolved" | "dismissed";
+export type UserRole = "super_admin" | "traffic_monitor" | "police" | "fire_fighter";
 export type SortOption =
   | "detected_at"
   | "-detected_at"
@@ -55,4 +56,44 @@ export type IncidentFilters = {
 export type IncidentCreatedMessage = {
   event: "incident.created";
   data: Incident;
+};
+
+export type User = {
+  id: string;
+  email: string;
+  full_name: string;
+  role: UserRole;
+  is_active: boolean;
+  created_at: string;
+};
+
+export type AuthResponse = {
+  access_token: string;
+  token_type: "bearer";
+  user: User;
+};
+
+export type Invitation = {
+  id: string;
+  email: string;
+  role: UserRole;
+  token: string;
+  expires_at: string;
+  accepted_at: string | null;
+};
+
+export type Notification = {
+  id: string;
+  incident_id: string;
+  recipient_role: UserRole;
+  message: string;
+  created_by_id: string;
+  read_at: string | null;
+  created_at: string;
+};
+
+export type SimulatorSettings = {
+  interval_seconds: number;
+  is_enabled: boolean;
+  updated_at: string;
 };

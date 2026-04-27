@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     database_url: str = (
         "postgresql+psycopg://traffic:traffic@localhost:5432/traffic_incidents"
     )
+    auth_secret_key: str = "change-me-in-production"
+    access_token_expire_minutes: int = 720
+    super_admin_email: str = "admin@example.com"
+    super_admin_password: str = "admin12345"
+    super_admin_name: str = "System Admin"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
