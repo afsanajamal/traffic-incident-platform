@@ -29,11 +29,12 @@ def run_continuous(client: IncidentApiClient, fallback_interval_seconds: float) 
 
 def main() -> None:
     api_base_url = os.getenv("API_BASE_URL", "http://localhost:8000")
+    fallback_api_base_url = os.getenv("FALLBACK_API_BASE_URL")
     interval_seconds = float(os.getenv("INTERVAL_SECONDS", "120"))
     run_mode = os.getenv("RUN_MODE", "continuous")
     batch_size = int(os.getenv("BATCH_SIZE", "5"))
 
-    client = IncidentApiClient(api_base_url)
+    client = IncidentApiClient(api_base_url, fallback_base_url=fallback_api_base_url)
 
     if run_mode == "once":
         run_once(client, batch_size=batch_size)

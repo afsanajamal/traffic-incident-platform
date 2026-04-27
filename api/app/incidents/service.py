@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
 
@@ -87,6 +89,10 @@ class IncidentService:
         if incident is None:
             raise IncidentNotFoundError
         self.repository.delete(incident)
+
+    def delete_many(self, incident_ids: list[uuid.UUID]) -> int:
+        unique_ids = list(dict.fromkeys(incident_ids))
+        return self.repository.delete_many(unique_ids)
 
     def _to_read(self, incident: Incident) -> IncidentRead:
         return IncidentRead.model_validate(incident)

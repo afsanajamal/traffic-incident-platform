@@ -14,6 +14,8 @@ from app.incidents.domain import IncidentType, Severity, Status
 from app.incidents.repository import IncidentRepository
 from app.incidents.schemas import (
     IncidentCreate,
+    IncidentBulkDelete,
+    IncidentBulkDeleteResult,
     IncidentList,
     IncidentRead,
     IncidentStatusUpdate,
@@ -119,6 +121,17 @@ def delete_incident(
     except IncidentNotFoundError as exc:
         raise HTTPException(status_code=404, detail="Incident not found") from exc
     return Response(status_code=204)
+
+
+@router.delete("/api/incidents", response_model=IncidentBulkDeleteResult)
+def delete_incidents(
+    delete_request: IncidentBulkDelete,
+    service: IncidentService = Depends(get_incident_service),
+    current_user: User = Depends(get_current_user),
+) -> IncidentBulkDeleteResult:
+    _ensure_role(current_user, UserRole.SUPER_ADMIN)
+    deleted = service.delete_many(delete_request.incident_ids)
+    return IncidentBulkDeleteResult(deleted=deleted)
 
 
 @router.post("/api/simulator/events", response_model=list[IncidentRead], status_code=201)
