@@ -9,6 +9,7 @@ import { IncidentTable } from "../components/IncidentTable";
 import { LiveConnectionIndicator } from "../components/LiveConnectionIndicator";
 import { SimulatorControlPanel } from "../components/SimulatorControlPanel";
 import { UserAdminPanel } from "../components/UserAdminPanel";
+import { Button } from "../components/ui/button";
 import {
   fetchCurrentUser,
   fetchIncidents,
@@ -157,17 +158,17 @@ export default function Home() {
   }
 
   return (
-    <main>
-      <header className="topbar">
+    <main className="min-h-screen bg-background">
+      <header className="flex items-center justify-between border-b bg-card px-6 py-4">
         <div>
-          <h1>Traffic Incidents</h1>
-          <p>
+          <h1 className="text-2xl font-semibold">Traffic Incidents</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {total} active records | {user.full_name} | {user.role.replace("_", " ")}
           </p>
         </div>
-        <div className="topbar-actions">
+        <div className="flex items-center gap-2">
           {user.role === "super_admin" ? (
-            <button type="button" onClick={toggleFakeEvents}>
+            <Button variant="outline" type="button" onClick={toggleFakeEvents}>
               {simulatorSettings?.is_enabled ?? true ? (
                 <PauseCircle size={16} />
               ) : (
@@ -178,12 +179,12 @@ export default function Home() {
                   ? "Stop fake events"
                   : "Generate fake events"}
               </span>
-            </button>
+            </Button>
           ) : null}
           <LiveConnectionIndicator connected={connected} />
-          <button className="icon-button" type="button" onClick={logout} title="Sign out">
+          <Button variant="outline" size="icon" type="button" onClick={logout} title="Sign out">
             <LogOut size={16} />
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -195,15 +196,17 @@ export default function Home() {
       ) : null}
 
       {notifications.length > 0 ? (
-        <section className="notification-strip">
+        <section className="flex gap-2 overflow-x-auto border-b border-amber-200 bg-amber-50 px-6 py-2">
           {notifications.slice(0, 3).map((notification) => (
-            <button
+            <Button
+              variant="outline"
+              className="max-w-xl flex-none justify-start overflow-hidden text-ellipsis whitespace-nowrap border-amber-200 text-amber-800"
               key={notification.id}
               type="button"
               onClick={() => setSelectedId(notification.incident_id)}
             >
               {notification.message}
-            </button>
+            </Button>
           ))}
         </section>
       ) : null}
@@ -214,9 +217,13 @@ export default function Home() {
         onRefresh={loadIncidents}
       />
 
-      {error ? <div className="error-banner">{error}</div> : null}
+      {error ? (
+        <div className="border-b border-red-200 bg-red-50 px-6 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      ) : null}
 
-      <section className="workspace">
+      <section className="grid min-h-[calc(100vh-130px)] grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px]">
         <IncidentTable
           incidents={incidents}
           selectedId={selectedId}

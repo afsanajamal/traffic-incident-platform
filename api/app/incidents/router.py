@@ -167,10 +167,15 @@ def _build_fake_incident() -> IncidentCreate:
         location_name=location_name,
         latitude=latitude,
         longitude=longitude,
-        image_url=f"https://example.com/snapshots/{camera_id}/latest.jpg",
+        image_url=_snapshot_url(),
         confidence=confidence,
         detected_at=datetime.now(UTC),
     )
+
+
+def _snapshot_url() -> str:
+    image_number = random.randint(1, 25)
+    return f"http://localhost:3000/snapshots/incident-{image_number:03}.png"
 
 
 def _ensure_role(current_user: User, *roles: UserRole) -> None:

@@ -10,3 +10,4 @@ def test_build_event_produces_valid_payload_shape() -> None:
     assert -180 <= event["longitude"] <= 180
     assert 0 <= event["confidence"] <= 1
     assert event["detected_at"]
+    assert event["image_url"].startswith("http://localhost:3000/snapshots/incident-")

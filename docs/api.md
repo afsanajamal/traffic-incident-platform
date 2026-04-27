@@ -26,6 +26,12 @@ Content-Type: application/json
 
 The response includes `id`, `status`, `created_at`, and `updated_at`.
 
+Fake/generated demo events use local snapshot URLs such as:
+
+```text
+http://localhost:3000/snapshots/incident-014.png
+```
+
 ## List Incidents
 
 ```http

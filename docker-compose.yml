@@ -47,6 +47,7 @@ services:
       context: ./simulator
     environment:
       API_BASE_URL: http://api:8000
+      SNAPSHOT_BASE_URL: http://localhost:3000/snapshots
       INTERVAL_SECONDS: 120
       RUN_MODE: continuous
     depends_on:

@@ -5,6 +5,7 @@ import {
   updateIncidentStatus,
 } from "../lib/api";
 import type { Incident, Status, User } from "../lib/types";
+import { Button } from "./ui/button";
 import { SeverityBadge } from "./SeverityBadge";
 import { StatusBadge } from "./StatusBadge";
 
@@ -28,7 +29,7 @@ export function IncidentDetailPanel({ incident, token, user, onUpdated }: Props)
 
   if (!incident) {
     return (
-      <aside className="detail-panel empty-detail">
+      <aside className="flex items-center justify-center gap-2 border-l bg-card p-5 text-sm text-muted-foreground">
         <CircleSlash size={24} aria-hidden="true" />
         <span>Select an incident</span>
       </aside>
@@ -62,39 +63,46 @@ export function IncidentDetailPanel({ incident, token, user, onUpdated }: Props)
   };
 
   return (
-    <aside className="detail-panel">
-      <div className="detail-header">
+    <aside className="border-l bg-card p-5">
+      <div className="flex justify-between gap-4">
         <div>
-          <h2>{incident.title}</h2>
-          <p>{incident.location_name}</p>
+          <h2 className="text-lg font-semibold leading-tight">{incident.title}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{incident.location_name}</p>
         </div>
-        <div className="badge-row">
+        <div className="flex flex-col items-start gap-1.5">
           <SeverityBadge severity={incident.severity} />
           <StatusBadge status={incident.status} />
         </div>
       </div>
 
       {incident.image_url ? (
-        <img className="snapshot" src={incident.image_url} alt="" />
+        <img
+          className="my-5 h-[210px] w-full rounded-md border object-cover"
+          src={incident.image_url}
+          alt=""
+        />
       ) : (
-        <div className="snapshot placeholder">No image</div>
+        <div className="my-5 flex h-[210px] w-full items-center justify-center rounded-md border bg-muted text-sm text-muted-foreground">
+          No image
+        </div>
       )}
 
-      <p className="description">{incident.description}</p>
+      <p className="text-sm leading-6 text-slate-700">{incident.description}</p>
 
-      <dl className="detail-grid">
-        <div><dt>Type</dt><dd>{incident.type.replaceAll("_", " ")}</dd></div>
-        <div><dt>Camera</dt><dd>{incident.camera_name}</dd></div>
-        <div><dt>Confidence</dt><dd>{Math.round(incident.confidence * 100)}%</dd></div>
-        <div><dt>Coordinates</dt><dd>{incident.latitude}, {incident.longitude}</dd></div>
-        <div><dt>Detected</dt><dd>{new Date(incident.detected_at).toLocaleString()}</dd></div>
-        <div><dt>Updated</dt><dd>{new Date(incident.updated_at).toLocaleString()}</dd></div>
+      <dl className="my-5 grid grid-cols-2 gap-3">
+        <div><dt className="mb-1 text-xs text-muted-foreground">Type</dt><dd className="text-sm">{incident.type.replaceAll("_", " ")}</dd></div>
+        <div><dt className="mb-1 text-xs text-muted-foreground">Camera</dt><dd className="text-sm">{incident.camera_name}</dd></div>
+        <div><dt className="mb-1 text-xs text-muted-foreground">Confidence</dt><dd className="text-sm">{Math.round(incident.confidence * 100)}%</dd></div>
+        <div><dt className="mb-1 text-xs text-muted-foreground">Coordinates</dt><dd className="text-sm">{incident.latitude}, {incident.longitude}</dd></div>
+        <div><dt className="mb-1 text-xs text-muted-foreground">Detected</dt><dd className="text-sm">{new Date(incident.detected_at).toLocaleString()}</dd></div>
+        <div><dt className="mb-1 text-xs text-muted-foreground">Updated</dt><dd className="text-sm">{new Date(incident.updated_at).toLocaleString()}</dd></div>
       </dl>
 
       {canUpdateStatus ? (
-        <div className="actions">
+        <div className="grid grid-cols-3 gap-2">
           {statusActions.map((action) => (
-            <button
+            <Button
+              variant="outline"
               key={action.status}
               type="button"
               onClick={() => updateStatus(action.status)}
@@ -102,26 +110,26 @@ export function IncidentDetailPanel({ incident, token, user, onUpdated }: Props)
             >
               {action.icon}
               <span>{action.label}</span>
-            </button>
+            </Button>
           ))}
         </div>
       ) : null}
 
       {canNotify ? (
-        <div className="actions responder-actions">
-          <button type="button" onClick={() => notify("police")}>Notify police</button>
-          <button type="button" onClick={() => notify("fire_fighter")}>Notify fire</button>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <Button variant="secondary" type="button" onClick={() => notify("police")}>Notify police</Button>
+          <Button variant="secondary" type="button" onClick={() => notify("fire_fighter")}>Notify fire</Button>
         </div>
       ) : null}
 
       {canReport ? (
-        <div className="actions responder-actions">
-          <button type="button" onClick={() => submitReport("acknowledged")}>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <Button variant="secondary" type="button" onClick={() => submitReport("acknowledged")}>
             Report acknowledged
-          </button>
-          <button type="button" onClick={() => submitReport("resolved")}>
+          </Button>
+          <Button variant="secondary" type="button" onClick={() => submitReport("resolved")}>
             Report resolved
-          </button>
+          </Button>
         </div>
       ) : null}
     </aside>

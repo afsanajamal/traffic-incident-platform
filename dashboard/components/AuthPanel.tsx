@@ -2,6 +2,9 @@ import { FormEvent, useState } from "react";
 import { LogIn, UserPlus } from "lucide-react";
 import { login, registerWithInvite } from "../lib/api";
 import type { AuthResponse } from "../lib/types";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader } from "./ui/card";
+import { Input } from "./ui/input";
 
 type Props = {
   onAuthenticated: (auth: AuthResponse) => void;
@@ -30,22 +33,28 @@ export function AuthPanel({ onAuthenticated }: Props) {
   };
 
   return (
-    <main className="auth-shell">
-      <form className="auth-panel" onSubmit={submit}>
-        <div>
-          <h1>{mode === "login" ? "Sign in" : "Register from invite"}</h1>
-          <p>Traffic incident operations access</p>
-        </div>
+    <main className="flex min-h-screen items-center justify-center bg-background p-6">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <h1 className="text-2xl font-semibold">
+            {mode === "login" ? "Sign in" : "Register from invite"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Traffic incident operations access
+          </p>
+        </CardHeader>
+        <CardContent>
+          <form className="grid gap-3" onSubmit={submit}>
 
         {mode === "register" ? (
           <>
-            <input
+            <Input
               value={invitationToken}
               onChange={(event) => setInvitationToken(event.target.value)}
               placeholder="Invitation token"
               required
             />
-            <input
+            <Input
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
               placeholder="Full name"
@@ -54,14 +63,14 @@ export function AuthPanel({ onAuthenticated }: Props) {
           </>
         ) : null}
 
-        <input
+        <Input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="Email"
           required
         />
-        <input
+        <Input
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
@@ -69,21 +78,27 @@ export function AuthPanel({ onAuthenticated }: Props) {
           required
         />
 
-        {error ? <div className="form-error">{error}</div> : null}
+        {error ? (
+          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        ) : null}
 
-        <button type="submit">
+        <Button type="submit">
           {mode === "login" ? <LogIn size={16} /> : <UserPlus size={16} />}
           <span>{mode === "login" ? "Sign in" : "Register and sign in"}</span>
-        </button>
+        </Button>
 
-        <button
-          className="secondary-button"
+        <Button
+          variant="secondary"
           type="button"
           onClick={() => setMode(mode === "login" ? "register" : "login")}
         >
           {mode === "login" ? "Use invitation token" : "Back to sign in"}
-        </button>
-      </form>
+        </Button>
+          </form>
+        </CardContent>
+      </Card>
     </main>
   );
 }

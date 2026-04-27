@@ -1,5 +1,6 @@
 import random
 from datetime import UTC, datetime
+import os
 
 
 INCIDENT_TYPES = [
@@ -64,6 +65,9 @@ TITLE_BY_TYPE = {
 }
 
 
+SNAPSHOT_COUNT = 25
+
+
 def build_event() -> dict:
     incident_type = random.choice(INCIDENT_TYPES)
     severity = random.choice(SEVERITY_BY_TYPE[incident_type])
@@ -86,7 +90,13 @@ def build_event() -> dict:
         "location_name": camera["location_name"],
         "latitude": camera["latitude"],
         "longitude": camera["longitude"],
-        "image_url": f"https://example.com/snapshots/{camera['camera_id']}/latest.jpg",
+        "image_url": _snapshot_url(),
         "confidence": confidence,
         "detected_at": datetime.now(UTC).isoformat(),
     }
+
+
+def _snapshot_url() -> str:
+    base_url = os.getenv("SNAPSHOT_BASE_URL", "http://localhost:3000/snapshots")
+    image_number = random.randint(1, SNAPSHOT_COUNT)
+    return f"{base_url.rstrip('/')}/incident-{image_number:03}.png"
