@@ -16,6 +16,7 @@ The simulator stands in for an upstream video analysis system. The API is the so
 - Docker and Docker Compose
 - Python 3.12 if running backend/simulator locally
 - Node.js 22 if running dashboard locally
+- Dashboard UI uses Tailwind CSS v4 with official shadcn-generated components.
 
 ## Run Everything
 
@@ -31,7 +32,7 @@ Important URLs:
 - Dashboard: http://localhost:3000
 - PostgreSQL: localhost:5432
 
-The API container runs `alembic upgrade head` before starting. The simulator defaults to one fake incident every 120 seconds. Super admins can start/stop fake event generation and change the interval from the dashboard without restarting the simulator.
+The API container runs `alembic upgrade head` before starting. The simulator defaults to one fake incident every 120 seconds. Super admins can start/stop fake event generation and change the interval from the dashboard without restarting the simulator. Fake events use local generated snapshot images from `dashboard/public/snapshots`.
 
 Default super admin login:
 
@@ -83,7 +84,7 @@ Optional simulator terminal:
 
 ```bash
 cd simulator
-API_BASE_URL=http://localhost:8000 INTERVAL_SECONDS=120 RUN_MODE=continuous uv run python -m simulator.main
+API_BASE_URL=http://localhost:8000 SNAPSHOT_BASE_URL=http://localhost:3000/snapshots INTERVAL_SECONDS=120 RUN_MODE=continuous uv run python -m simulator.main
 ```
 
 ## API Summary

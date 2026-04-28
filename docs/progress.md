@@ -23,6 +23,8 @@
 - Dashboard login/register, super-admin invite controls, fake event trigger, and role-specific incident actions.
 - Dynamic simulator interval setting with 120-second default and super-admin dashboard control.
 - Super-admin start/stop toggle for continuous fake event generation.
+- 25 local generated traffic/public-safety snapshot images wired into fake events.
+- Dashboard converted from custom CSS to Tailwind CSS v4 with official shadcn-generated UI components.
 
 ## Known Limitations
 

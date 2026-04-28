@@ -4,6 +4,8 @@ import {
   fetchSimulatorSettings,
   updateSimulatorSettings,
 } from "../lib/api";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 type Props = {
   token: string;
@@ -39,13 +41,15 @@ export function SimulatorControlPanel({ token }: Props) {
   };
 
   return (
-    <section className="simulator-panel">
-      <form onSubmit={submit}>
+    <section className="border-b bg-card px-6 py-3">
+      <form className="grid gap-2 lg:grid-cols-[minmax(220px,1fr)_180px_120px]" onSubmit={submit}>
         <div>
-          <strong>Simulator interval</strong>
-          <span>Current: every {savedInterval} seconds</span>
+          <strong className="block text-sm font-semibold">Simulator interval</strong>
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            Current: every {savedInterval} seconds
+          </span>
         </div>
-        <input
+        <Input
           type="number"
           min={10}
           max={3600}
@@ -54,12 +58,16 @@ export function SimulatorControlPanel({ token }: Props) {
           onChange={(event) => setIntervalSeconds(Number(event.target.value))}
           aria-label="Simulator interval seconds"
         />
-        <button type="submit">
+        <Button type="submit">
           <Clock size={16} />
           <span>Save timer</span>
-        </button>
+        </Button>
       </form>
-      {error ? <div className="form-error">{error}</div> : null}
+      {error ? (
+        <div className="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      ) : null}
     </section>
   );
 }

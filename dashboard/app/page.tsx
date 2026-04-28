@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { LogOut, PauseCircle, PlayCircle } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LogOut, PauseCircle, PlayCircle, PlusCircle } from "lucide-react";
 import { AuthPanel } from "../components/AuthPanel";
 import { IncidentDetailPanel } from "../components/IncidentDetailPanel";
 import { IncidentFilters } from "../components/IncidentFilters";
@@ -9,11 +9,14 @@ import { IncidentTable } from "../components/IncidentTable";
 import { LiveConnectionIndicator } from "../components/LiveConnectionIndicator";
 import { SimulatorControlPanel } from "../components/SimulatorControlPanel";
 import { UserAdminPanel } from "../components/UserAdminPanel";
+import { Button } from "../components/ui/button";
 import {
+  deleteIncidents,
   fetchCurrentUser,
   fetchIncidents,
   fetchNotifications,
   fetchSimulatorSettings,
+  generateFakeEvents,
   updateSimulatorSettings,
 } from "../lib/api";
 import { connectIncidentSocket } from "../lib/websocket";
@@ -44,9 +47,11 @@ export default function Home() {
   const [simulatorSettings, setSimulatorSettings] =
     useState<SimulatorSettings | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIncidentIds, setSelectedIncidentIds] = useState<string[]>([]);
   const [total, setTotal] = useState(0);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const generatingAutoEvent = useRef(false);
 
   const selectedIncident = useMemo(
     () => incidents.find((incident) => incident.id === selectedId) ?? null,
@@ -63,6 +68,11 @@ export default function Home() {
       setIncidents(data.items);
       setTotal(data.total);
       setSelectedId((current) => current ?? data.items[0]?.id ?? null);
+      setSelectedIncidentIds((current) =>
+        current.filter((incidentId) =>
+          data.items.some((incident) => incident.id === incidentId),
+        ),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load incidents");
     }
@@ -128,6 +138,36 @@ export default function Home() {
     );
   };
 
+  const addCreatedIncidents = useCallback((created: Incident[]) => {
+    if (created.length === 0) {
+      return;
+    }
+    setIncidents((current) => [
+      ...created,
+      ...current.filter(
+        (incident) => !created.some((newIncident) => newIncident.id === incident.id),
+      ),
+    ]);
+    setSelectedId((current) => current ?? created[0]?.id ?? null);
+    setTotal((current) => current + created.length);
+  }, []);
+
+  const removeIncidentsFromState = (incidentIds: string[]) => {
+    const deletedIds = new Set(incidentIds);
+    setIncidents((current) => current.filter((incident) => !deletedIds.has(incident.id)));
+    setSelectedIncidentIds((current) =>
+      current.filter((incidentId) => !deletedIds.has(incidentId)),
+    );
+    setSelectedId((current) => {
+      if (!current || !deletedIds.has(current)) {
+        return current;
+      }
+      const nextIncident = incidents.find((incident) => !deletedIds.has(incident.id));
+      return nextIncident?.id ?? null;
+    });
+    setTotal((current) => Math.max(0, current - incidentIds.length));
+  };
+
   const authenticated = (auth: AuthResponse) => {
     window.localStorage.setItem("trafficIncidentToken", auth.access_token);
     setToken(auth.access_token);
@@ -152,38 +192,126 @@ export default function Home() {
     );
   };
 
+  const generateOneFakeEvent = async () => {
+    if (!token || user?.role !== "super_admin") {
+      return;
+    }
+    try {
+      setError(null);
+      const created = await generateFakeEvents(1, token);
+      addCreatedIncidents(created);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate fake event");
+    }
+  };
+
+  useEffect(() => {
+    if (!token || user?.role !== "super_admin" || !simulatorSettings?.is_enabled) {
+      return;
+    }
+
+    const intervalMs = Math.max(10, simulatorSettings.interval_seconds) * 1000;
+    const intervalId = window.setInterval(async () => {
+      if (generatingAutoEvent.current) {
+        return;
+      }
+      generatingAutoEvent.current = true;
+      try {
+        setError(null);
+        const created = await generateFakeEvents(1, token);
+        addCreatedIncidents(created);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to generate fake event");
+      } finally {
+        generatingAutoEvent.current = false;
+      }
+    }, intervalMs);
+
+    return () => window.clearInterval(intervalId);
+  }, [
+    addCreatedIncidents,
+    simulatorSettings?.interval_seconds,
+    simulatorSettings?.is_enabled,
+    token,
+    user?.role,
+  ]);
+
+  const toggleIncidentSelected = (incidentId: string, checked: boolean) => {
+    setSelectedIncidentIds((current) => {
+      if (checked) {
+        return current.includes(incidentId) ? current : [...current, incidentId];
+      }
+      return current.filter((currentId) => currentId !== incidentId);
+    });
+  };
+
+  const toggleAllVisibleIncidents = (checked: boolean) => {
+    if (!checked) {
+      const visibleIds = new Set(incidents.map((incident) => incident.id));
+      setSelectedIncidentIds((current) =>
+        current.filter((incidentId) => !visibleIds.has(incidentId)),
+      );
+      return;
+    }
+    setSelectedIncidentIds((current) => [
+      ...current,
+      ...incidents
+        .map((incident) => incident.id)
+        .filter((incidentId) => !current.includes(incidentId)),
+    ]);
+  };
+
+  const deleteSelectedIncidents = async () => {
+    if (!token || user?.role !== "super_admin" || selectedIncidentIds.length === 0) {
+      return;
+    }
+    try {
+      setError(null);
+      await deleteIncidents(selectedIncidentIds, token);
+      removeIncidentsFromState(selectedIncidentIds);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete incidents");
+    }
+  };
+
   if (!token || !user) {
     return <AuthPanel onAuthenticated={authenticated} />;
   }
 
   return (
-    <main>
-      <header className="topbar">
+    <main className="min-h-screen bg-background">
+      <header className="flex items-center justify-between border-b bg-card px-6 py-4">
         <div>
-          <h1>Traffic Incidents</h1>
-          <p>
+          <h1 className="text-2xl font-semibold">Traffic Incidents</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {total} active records | {user.full_name} | {user.role.replace("_", " ")}
           </p>
         </div>
-        <div className="topbar-actions">
+        <div className="flex items-center gap-2">
           {user.role === "super_admin" ? (
-            <button type="button" onClick={toggleFakeEvents}>
-              {simulatorSettings?.is_enabled ?? true ? (
-                <PauseCircle size={16} />
-              ) : (
-                <PlayCircle size={16} />
-              )}
-              <span>
-                {simulatorSettings?.is_enabled ?? true
-                  ? "Stop fake events"
-                  : "Generate fake events"}
-              </span>
-            </button>
+            <>
+              <Button variant="outline" type="button" onClick={generateOneFakeEvent}>
+                <PlusCircle size={16} />
+                <span>Generate event</span>
+              </Button>
+              <Button variant="outline" type="button" onClick={toggleFakeEvents}>
+                {simulatorSettings?.is_enabled ?? true ? (
+                  <PauseCircle size={16} />
+                ) : (
+                  <PlayCircle size={16} />
+                )}
+                <span>
+                  {simulatorSettings?.is_enabled ?? true
+                    ? "Stop fake events"
+                    : "Start auto events"}
+                </span>
+              </Button>
+            </>
           ) : null}
           <LiveConnectionIndicator connected={connected} />
-          <button className="icon-button" type="button" onClick={logout} title="Sign out">
+          <Button variant="outline" size="icon" type="button" onClick={logout} title="Sign out">
             <LogOut size={16} />
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -195,15 +323,17 @@ export default function Home() {
       ) : null}
 
       {notifications.length > 0 ? (
-        <section className="notification-strip">
+        <section className="flex gap-2 overflow-x-auto border-b border-amber-200 bg-amber-50 px-6 py-2">
           {notifications.slice(0, 3).map((notification) => (
-            <button
+            <Button
+              variant="outline"
+              className="max-w-xl flex-none justify-start overflow-hidden text-ellipsis whitespace-nowrap border-amber-200 text-amber-800"
               key={notification.id}
               type="button"
               onClick={() => setSelectedId(notification.incident_id)}
             >
               {notification.message}
-            </button>
+            </Button>
           ))}
         </section>
       ) : null}
@@ -214,13 +344,22 @@ export default function Home() {
         onRefresh={loadIncidents}
       />
 
-      {error ? <div className="error-banner">{error}</div> : null}
+      {error ? (
+        <div className="border-b border-red-200 bg-red-50 px-6 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      ) : null}
 
-      <section className="workspace">
+      <section className="grid min-h-[calc(100vh-130px)] grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px]">
         <IncidentTable
           incidents={incidents}
           selectedId={selectedId}
+          canDelete={user.role === "super_admin"}
+          selectedIncidentIds={selectedIncidentIds}
           onSelect={(incident) => setSelectedId(incident.id)}
+          onToggleSelected={toggleIncidentSelected}
+          onToggleAllSelected={toggleAllVisibleIncidents}
+          onDeleteSelected={deleteSelectedIncidents}
         />
         <IncidentDetailPanel
           incident={selectedIncident}

@@ -59,6 +59,38 @@ export async function updateIncidentStatus(
   return response.json();
 }
 
+export async function deleteIncident(
+  incidentId: string,
+  token: string,
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/incidents/${incidentId}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete incident");
+  }
+}
+
+export async function deleteIncidents(
+  incidentIds: string[],
+  token: string,
+): Promise<{ deleted: number }> {
+  const response = await fetch(`${API_BASE_URL}/api/incidents/bulk-delete`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders(token) },
+    body: JSON.stringify({ incident_ids: incidentIds }),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail || "Failed to delete incidents");
+  }
+
+  return response.json();
+}
+
 export async function login(email: string, password: string): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
     method: "POST",

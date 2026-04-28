@@ -1,12 +1,15 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Select, case, func, select
+from sqlalchemy import Select, case, delete, func, select
 from sqlalchemy.orm import Session
 
 from app.incidents.domain import IncidentType, Severity, Status
 from app.incidents.model import Incident
 from app.incidents.schemas import IncidentCreate, IncidentUpdate, SortOption
+from app.operations.model import IncidentNotification, IncidentReport
 
 
 class IncidentRepository:
@@ -66,8 +69,35 @@ class IncidentRepository:
         return incident
 
     def delete(self, incident: Incident) -> None:
+        self.db.execute(
+            delete(IncidentNotification).where(
+                IncidentNotification.incident_id == incident.id
+            )
+        )
+        self.db.execute(
+            delete(IncidentReport).where(IncidentReport.incident_id == incident.id)
+        )
         self.db.delete(incident)
         self.db.commit()
+
+    def delete_many(self, incident_ids: list[uuid.UUID]) -> int:
+        existing_ids = list(
+            self.db.scalars(select(Incident.id).where(Incident.id.in_(incident_ids))).all()
+        )
+        if not existing_ids:
+            return 0
+
+        self.db.execute(
+            delete(IncidentNotification).where(
+                IncidentNotification.incident_id.in_(existing_ids)
+            )
+        )
+        self.db.execute(
+            delete(IncidentReport).where(IncidentReport.incident_id.in_(existing_ids))
+        )
+        result = self.db.execute(delete(Incident).where(Incident.id.in_(existing_ids)))
+        self.db.commit()
+        return result.rowcount or len(existing_ids)
 
     def _filtered_query(
         self,

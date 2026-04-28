@@ -14,6 +14,8 @@ from app.incidents.domain import IncidentType, Severity, Status
 from app.incidents.repository import IncidentRepository
 from app.incidents.schemas import (
     IncidentCreate,
+    IncidentBulkDelete,
+    IncidentBulkDeleteResult,
     IncidentList,
     IncidentRead,
     IncidentStatusUpdate,
@@ -121,6 +123,28 @@ def delete_incident(
     return Response(status_code=204)
 
 
+@router.delete("/api/incidents", response_model=IncidentBulkDeleteResult)
+def delete_incidents(
+    delete_request: IncidentBulkDelete,
+    service: IncidentService = Depends(get_incident_service),
+    current_user: User = Depends(get_current_user),
+) -> IncidentBulkDeleteResult:
+    _ensure_role(current_user, UserRole.SUPER_ADMIN)
+    deleted = service.delete_many(delete_request.incident_ids)
+    return IncidentBulkDeleteResult(deleted=deleted)
+
+
+@router.post("/api/incidents/bulk-delete", response_model=IncidentBulkDeleteResult)
+def bulk_delete_incidents(
+    delete_request: IncidentBulkDelete,
+    service: IncidentService = Depends(get_incident_service),
+    current_user: User = Depends(get_current_user),
+) -> IncidentBulkDeleteResult:
+    _ensure_role(current_user, UserRole.SUPER_ADMIN)
+    deleted = service.delete_many(delete_request.incident_ids)
+    return IncidentBulkDeleteResult(deleted=deleted)
+
+
 @router.post("/api/simulator/events", response_model=list[IncidentRead], status_code=201)
 async def generate_fake_events(
     count: Annotated[int, Query(ge=1, le=25)] = 1,
@@ -167,10 +191,15 @@ def _build_fake_incident() -> IncidentCreate:
         location_name=location_name,
         latitude=latitude,
         longitude=longitude,
-        image_url=f"https://example.com/snapshots/{camera_id}/latest.jpg",
+        image_url=_snapshot_url(),
         confidence=confidence,
         detected_at=datetime.now(UTC),
     )
+
+
+def _snapshot_url() -> str:
+    image_number = random.randint(1, 25)
+    return f"http://localhost:3000/snapshots/incident-{image_number:03}.png"
 
 
 def _ensure_role(current_user: User, *roles: UserRole) -> None:

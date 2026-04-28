@@ -1,5 +1,17 @@
 import type { Status } from "../lib/types";
+import { Badge } from "./ui/badge";
 
 export function StatusBadge({ status }: { status: Status }) {
-  return <span className={`badge status-${status}`}>{status}</span>;
+  const classNameByStatus = {
+    new: "bg-cyan-50 text-cyan-800 border-cyan-200",
+    acknowledged: "bg-amber-50 text-amber-800 border-amber-200",
+    resolved: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    dismissed: "bg-red-50 text-red-700 border-red-200",
+  } as const;
+
+  return (
+    <Badge variant="outline" className={classNameByStatus[status]}>
+      {status}
+    </Badge>
+  );
 }

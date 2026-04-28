@@ -60,6 +60,14 @@ class IncidentStatusUpdate(BaseModel):
     status: Status
 
 
+class IncidentBulkDelete(BaseModel):
+    incident_ids: list[uuid.UUID] = Field(min_length=1, max_length=100)
+
+
+class IncidentBulkDeleteResult(BaseModel):
+    deleted: int
+
+
 class IncidentList(BaseModel):
     items: list[IncidentRead]
     total: int
