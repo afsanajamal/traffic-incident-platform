@@ -134,6 +134,17 @@ def delete_incidents(
     return IncidentBulkDeleteResult(deleted=deleted)
 
 
+@router.post("/api/incidents/bulk-delete", response_model=IncidentBulkDeleteResult)
+def bulk_delete_incidents(
+    delete_request: IncidentBulkDelete,
+    service: IncidentService = Depends(get_incident_service),
+    current_user: User = Depends(get_current_user),
+) -> IncidentBulkDeleteResult:
+    _ensure_role(current_user, UserRole.SUPER_ADMIN)
+    deleted = service.delete_many(delete_request.incident_ids)
+    return IncidentBulkDeleteResult(deleted=deleted)
+
+
 @router.post("/api/simulator/events", response_model=list[IncidentRead], status_code=201)
 async def generate_fake_events(
     count: Annotated[int, Query(ge=1, le=25)] = 1,

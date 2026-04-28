@@ -1,5 +1,6 @@
 import { ArrowDownUp, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import type { Incident } from "../lib/types";
 import { cn } from "../lib/utils";
 import { SeverityBadge } from "./SeverityBadge";
@@ -22,7 +23,7 @@ type Props = {
   onSelect: (incident: Incident) => void;
   onToggleSelected?: (incidentId: string, checked: boolean) => void;
   onToggleAllSelected?: (checked: boolean) => void;
-  onDeleteSelected?: () => void;
+  onDeleteSelected?: () => void | Promise<void>;
 };
 
 export function IncidentTable({
@@ -35,9 +36,16 @@ export function IncidentTable({
   onToggleAllSelected,
   onDeleteSelected,
 }: Props) {
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const selectedSet = new Set(selectedIncidentIds);
   const allVisibleSelected =
     incidents.length > 0 && incidents.every((incident) => selectedSet.has(incident.id));
+
+  useEffect(() => {
+    if (selectedIncidentIds.length === 0) {
+      setConfirmDeleteOpen(false);
+    }
+  }, [selectedIncidentIds.length]);
 
   return (
     <div className="border-r bg-background px-6 py-4">
@@ -46,15 +54,46 @@ export function IncidentTable({
           <p className="text-sm text-muted-foreground">
             {selectedIncidentIds.length} selected
           </p>
-          <Button
-            variant="destructive"
-            type="button"
-            disabled={selectedIncidentIds.length === 0}
-            onClick={onDeleteSelected}
-          >
-            <Trash2 size={16} aria-hidden="true" />
-            <span>Delete selected</span>
-          </Button>
+          <div className="relative">
+            <Button
+              variant="destructive"
+              type="button"
+              disabled={selectedIncidentIds.length === 0}
+              onClick={() => setConfirmDeleteOpen((current) => !current)}
+            >
+              <Trash2 size={16} aria-hidden="true" />
+              <span>Delete selected</span>
+            </Button>
+            {confirmDeleteOpen ? (
+              <div className="absolute right-0 top-10 z-20 w-64 rounded-lg border bg-popover p-3 text-popover-foreground shadow-lg">
+                <p className="text-sm font-medium">Delete selected incidents?</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {selectedIncidentIds.length} records will be removed.
+                </p>
+                <div className="mt-3 flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    onClick={() => setConfirmDeleteOpen(false)}
+                  >
+                    No
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    type="button"
+                    onClick={async () => {
+                      await onDeleteSelected?.();
+                      setConfirmDeleteOpen(false);
+                    }}
+                  >
+                    Yes
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
       <div className="overflow-hidden rounded-lg border">

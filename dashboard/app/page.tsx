@@ -265,9 +265,6 @@ export default function Home() {
     if (!token || user?.role !== "super_admin" || selectedIncidentIds.length === 0) {
       return;
     }
-    if (!window.confirm(`Delete ${selectedIncidentIds.length} selected incidents?`)) {
-      return;
-    }
     try {
       setError(null);
       await deleteIncidents(selectedIncidentIds, token);

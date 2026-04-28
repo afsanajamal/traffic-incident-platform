@@ -77,14 +77,15 @@ export async function deleteIncidents(
   incidentIds: string[],
   token: string,
 ): Promise<{ deleted: number }> {
-  const response = await fetch(`${API_BASE_URL}/api/incidents`, {
-    method: "DELETE",
+  const response = await fetch(`${API_BASE_URL}/api/incidents/bulk-delete`, {
+    method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders(token) },
     body: JSON.stringify({ incident_ids: incidentIds }),
   });
 
   if (!response.ok) {
-    throw new Error("Failed to delete incidents");
+    const detail = await response.text();
+    throw new Error(detail || "Failed to delete incidents");
   }
 
   return response.json();
