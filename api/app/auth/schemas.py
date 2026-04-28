@@ -38,6 +38,8 @@ class InvitationRead(BaseModel):
     email: EmailStr
     role: UserRole
     token: str
+    registration_url: str | None = None
+    email_sent: bool = False
     expires_at: datetime
     accepted_at: datetime | None
 

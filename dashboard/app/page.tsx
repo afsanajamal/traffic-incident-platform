@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LogOut, PauseCircle, PlayCircle, PlusCircle } from "lucide-react";
 import { AuthPanel } from "../components/AuthPanel";
+import {
+  DashboardSidebar,
+  type DashboardTab,
+} from "../components/DashboardSidebar";
 import { IncidentDetailPanel } from "../components/IncidentDetailPanel";
 import { IncidentFilters } from "../components/IncidentFilters";
 import { IncidentTable } from "../components/IncidentTable";
@@ -38,6 +42,14 @@ const defaultFilters: Filters = {
   sort: "-detected_at",
 };
 
+const dashboardTabs: DashboardTab[] = [
+  "overview",
+  "incidents",
+  "notifications",
+  "simulator",
+  "users",
+];
+
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -51,6 +63,7 @@ export default function Home() {
   const [total, setTotal] = useState(0);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const generatingAutoEvent = useRef(false);
 
   const selectedIncident = useMemo(
@@ -94,6 +107,13 @@ export default function Home() {
 
   useEffect(() => {
     const savedToken = window.localStorage.getItem("trafficIncidentToken");
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    if (tab && dashboardTabs.includes(tab as DashboardTab)) {
+      setActiveTab(tab as DashboardTab);
+    }
+    if (window.location.hash) {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
     if (!savedToken) {
       return;
     }
@@ -104,6 +124,22 @@ export default function Home() {
       })
       .catch(() => window.localStorage.removeItem("trafficIncidentToken"));
   }, []);
+
+  const changeTab = (tab: DashboardTab) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(window.location.search);
+    if (tab === "overview") {
+      params.delete("tab");
+    } else {
+      params.set("tab", tab);
+    }
+    const queryString = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${queryString ? `?${queryString}` : ""}`,
+    );
+  };
 
   useEffect(() => {
     loadIncidents();
@@ -279,8 +315,17 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      <header className="flex items-center justify-between border-b bg-card px-6 py-4">
+    <main className="min-h-screen bg-background md:grid md:grid-cols-[248px_minmax(0,1fr)]">
+      <DashboardSidebar
+        user={user}
+        totalIncidents={total}
+        activeTab={activeTab}
+        onTabChange={changeTab}
+      />
+      <div className="min-w-0">
+      <header
+        className="sticky top-0 z-30 flex items-center justify-between border-b bg-card px-6 py-4"
+      >
         <div>
           <h1 className="text-2xl font-semibold">Traffic Incidents</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -315,59 +360,90 @@ export default function Home() {
         </div>
       </header>
 
-      {user.role === "super_admin" ? (
+      {activeTab === "overview" ? (
         <>
-          <SimulatorControlPanel token={token} />
-          <UserAdminPanel token={token} />
-        </>
-      ) : null}
+          {user.role === "super_admin" ? (
+            <div>
+              <SimulatorControlPanel token={token} />
+            </div>
+          ) : null}
 
-      {notifications.length > 0 ? (
-        <section className="flex gap-2 overflow-x-auto border-b border-amber-200 bg-amber-50 px-6 py-2">
-          {notifications.slice(0, 3).map((notification) => (
-            <Button
-              variant="outline"
-              className="max-w-xl flex-none justify-start overflow-hidden text-ellipsis whitespace-nowrap border-amber-200 text-amber-800"
-              key={notification.id}
-              type="button"
-              onClick={() => setSelectedId(notification.incident_id)}
+          {notifications.length > 0 ? (
+            <section
+              className="flex gap-2 overflow-x-auto border-b border-amber-200 bg-amber-50 px-6 py-2"
             >
-              {notification.message}
-            </Button>
-          ))}
+              {notifications.slice(0, 3).map((notification) => (
+                <Button
+                  variant="outline"
+                  className="max-w-xl flex-none justify-start overflow-hidden text-ellipsis whitespace-nowrap border-amber-200 text-amber-800"
+                  key={notification.id}
+                  type="button"
+                  onClick={() => setSelectedId(notification.incident_id)}
+                >
+                  {notification.message}
+                </Button>
+              ))}
+            </section>
+          ) : null}
+
+          <IncidentFilters
+            filters={filters}
+            onChange={setFilters}
+            onRefresh={loadIncidents}
+          />
+
+          {error ? (
+            <div className="border-b border-red-200 bg-red-50 px-6 py-2 text-sm text-red-700">
+              {error}
+            </div>
+          ) : null}
+
+          <section
+            className="grid min-h-[calc(100vh-130px)] grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px]"
+          >
+            <IncidentTable
+              incidents={incidents}
+              selectedId={selectedId}
+              canDelete={user.role === "super_admin"}
+              selectedIncidentIds={selectedIncidentIds}
+              onSelect={(incident) => setSelectedId(incident.id)}
+              onToggleSelected={toggleIncidentSelected}
+              onToggleAllSelected={toggleAllVisibleIncidents}
+              onDeleteSelected={deleteSelectedIncidents}
+            />
+            <IncidentDetailPanel
+              incident={selectedIncident}
+              token={token}
+              user={user}
+              onUpdated={updateIncident}
+            />
+          </section>
+        </>
+      ) : activeTab === "users" && user.role === "super_admin" ? (
+        <section className="p-6">
+          <div className="rounded-lg border bg-card">
+            <div className="border-b px-6 py-4">
+              <h2 className="text-lg font-semibold">Users & invites</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Invite users by email and assign their platform role.
+              </p>
+            </div>
+            <UserAdminPanel token={token} />
+          </div>
         </section>
-      ) : null}
-
-      <IncidentFilters
-        filters={filters}
-        onChange={setFilters}
-        onRefresh={loadIncidents}
-      />
-
-      {error ? (
-        <div className="border-b border-red-200 bg-red-50 px-6 py-2 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
-
-      <section className="grid min-h-[calc(100vh-130px)] grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px]">
-        <IncidentTable
-          incidents={incidents}
-          selectedId={selectedId}
-          canDelete={user.role === "super_admin"}
-          selectedIncidentIds={selectedIncidentIds}
-          onSelect={(incident) => setSelectedId(incident.id)}
-          onToggleSelected={toggleIncidentSelected}
-          onToggleAllSelected={toggleAllVisibleIncidents}
-          onDeleteSelected={deleteSelectedIncidents}
-        />
-        <IncidentDetailPanel
-          incident={selectedIncident}
-          token={token}
-          user={user}
-          onUpdated={updateIncident}
-        />
-      </section>
+      ) : (
+        <section className="p-6">
+          <div className="rounded-lg border bg-card p-6">
+            <h2 className="text-lg font-semibold capitalize">
+              {activeTab.replace("_", " ")}
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This section is ready for the next dashboard update.
+            </p>
+          </div>
+        </section>
+      )}
+      </div>
     </main>
   );
 }

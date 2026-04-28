@@ -20,6 +20,7 @@ from app.auth.schemas import (
 from app.auth.security import create_access_token, hash_password, verify_password
 from app.core.config import get_settings
 from app.core.database import get_session
+from app.core.email import invitation_url, send_invitation_email
 
 
 router = APIRouter()
@@ -79,7 +80,7 @@ def create_invitation(
     payload: InvitationCreate,
     db: Session = Depends(get_session),
     current_user: User = Depends(require_roles(UserRole.SUPER_ADMIN)),
-) -> Invitation:
+) -> InvitationRead:
     existing_user = db.scalar(select(User).where(User.email == payload.email.lower()))
     if existing_user is not None:
         raise HTTPException(status_code=409, detail="User already exists")
@@ -94,7 +95,20 @@ def create_invitation(
     db.add(invitation)
     db.commit()
     db.refresh(invitation)
-    return invitation
+
+    settings = get_settings()
+    email_sent = send_invitation_email(
+        settings=settings,
+        recipient_email=invitation.email,
+        role=invitation.role.value,
+        token=invitation.token,
+    )
+    return InvitationRead.model_validate(invitation).model_copy(
+        update={
+            "registration_url": invitation_url(settings, invitation.token),
+            "email_sent": email_sent,
+        }
+    )
 
 
 @router.get("/api/invitations", response_model=list[InvitationRead])

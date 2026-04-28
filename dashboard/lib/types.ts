@@ -78,6 +78,8 @@ export type Invitation = {
   email: string;
   role: UserRole;
   token: string;
+  registration_url: string | null;
+  email_sent: boolean;
   expires_at: string;
   accepted_at: string | null;
 };
