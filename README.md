@@ -80,6 +80,21 @@ npm run dev
 
 The dashboard runs at `http://localhost:3000`.
 
+SMTP invite email configuration lives in `api/.env` or Docker environment:
+
+```bash
+FRONTEND_BASE_URL=http://localhost:3000
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USERNAME=your-smtp-user
+SMTP_PASSWORD=your-smtp-password
+SMTP_FROM_EMAIL=no-reply@example.com
+SMTP_FROM_NAME="Traffic Incident Platform"
+SMTP_USE_TLS=true
+```
+
+If `SMTP_HOST` is empty, invitations are still created and the dashboard shows the registration link for local testing.
+
 Optional simulator terminal:
 
 ```bash

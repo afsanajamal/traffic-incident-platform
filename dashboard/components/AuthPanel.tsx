@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { LogIn, UserPlus } from "lucide-react";
 import { login, registerWithInvite } from "../lib/api";
 import type { AuthResponse } from "../lib/types";
@@ -17,6 +17,17 @@ export function AuthPanel({ onAuthenticated }: Props) {
   const [fullName, setFullName] = useState("");
   const [invitationToken, setInvitationToken] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const inviteToken = new URLSearchParams(window.location.search).get("invite");
+    if (!inviteToken) {
+      return;
+    }
+    setMode("register");
+    setInvitationToken(inviteToken);
+    setEmail("");
+    setPassword("");
+  }, []);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
